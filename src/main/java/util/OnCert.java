@@ -6,6 +6,7 @@ package util;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -610,4 +611,35 @@ public class OnCert {
 		return ks;
 	}
 
+	public static KeyStore loadKeystore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
+		KeyStore ks = KeyStore.getInstance(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE));
+		
+		File signerFile = new File(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE));
+		FileInputStream fis = new FileInputStream(signerFile);
+		ks.load(fis, SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray());
+		fis.close();
+		
+		return ks;
+	}
+
+	public static String getAliasCertificate(KeyStore keystore) throws KeyStoreException {
+		String alias = "";
+		Enumeration<String> aliasesEnum = keystore.aliases();
+		
+		while (aliasesEnum.hasMoreElements()) {
+			alias = (String) aliasesEnum.nextElement();
+			System.out.println("Alias encontrado: "+ alias);
+			
+			if (keystore.isKeyEntry(alias)) {
+				break;
+			}
+		}
+		
+		return alias;
+	}
+	
+	public static String getSenhaCertificado() {
+		String senhaDoCertificado = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD);
+		return senhaDoCertificado;
+	}
 }

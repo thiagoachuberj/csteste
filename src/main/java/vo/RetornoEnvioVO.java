@@ -1,8 +1,5 @@
 package vo;
 
-import util.EStatusEnvio;
-import util.ETipoErro;
-
 /**
  * Classe responsável por retornar o resultado do envio do lote.
  * 
@@ -11,18 +8,11 @@ import util.ETipoErro;
  */
 public class RetornoEnvioVO extends BaseVO { 
 
-	private EStatusEnvio status;
-	private ETipoErro tipoErro;
-	private String mensagem;
 	private String protocolo;
 	private String loteEnviado;
-
-	public String getMensagem() {
-		return mensagem;
-	}
-	public void setMensagem(String mensagem) {
-		this.mensagem = mensagem;
-	}
+	private String retornoEnvio;
+	private Object retornoEnvioObjeto;
+	
 	public String getLoteEnviado() {
 		return loteEnviado;
 	}
@@ -35,17 +25,16 @@ public class RetornoEnvioVO extends BaseVO {
 	public void setProtocolo(String protocolo) {
 		this.protocolo = protocolo;
 	}
-	public EStatusEnvio getStatus() {
-		return status;
+	public void setRetornoEnvio(String retornoEnvio) {
+		this.retornoEnvio = retornoEnvio;
 	}
-	public void setStatus(EStatusEnvio status) {
-		this.status = status;
+	public String getRetornoEnvio() {
+		return retornoEnvio;
 	}
-	public ETipoErro getTipoErro() {
-		return tipoErro;
+	public void setRetornoEnvioObjeto(Object xmlToObject) {
+		this.retornoEnvioObjeto = retornoEnvioObjeto;
 	}
-	public void setTipoErro(ETipoErro tipoErro) {
-		this.tipoErro = tipoErro;
+	public Object getRetornoEnvioObjeto() {
+		return retornoEnvioObjeto;
 	}
-
 }

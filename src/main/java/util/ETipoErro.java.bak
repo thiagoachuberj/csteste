@@ -6,8 +6,6 @@ public enum ETipoErro {
 	MONTAGEM_LOTE,
 	XML,
 	SERPRO,
-	ENVIO,
-	CONSULTA,
-	CREATE_SOAP_MESSAGE
+	ENVIO
 	
 }

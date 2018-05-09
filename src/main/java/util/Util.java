@@ -1,19 +1,32 @@
 package util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.soap.MessageFactory;
+import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPMessage;
+import javax.xml.soap.SOAPPart;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import xml.XmlDocumentBuildFactory;
@@ -85,4 +98,85 @@ public final class Util {
 			in.close();
 		}
 	}
+	
+	public static String createTemplateSoapMessage() throws SOAPException, IOException {
+		/*sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+		sb.append("<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
+		sb.append(" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"");
+		sb.append(" xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">");
+		sb.append(" <soap:Header/>");
+		sb.append(" <soap:Body>");*/
+		String soapMessage = "";
+		
+		try {
+			MessageFactory factory = MessageFactory.newInstance();
+            SOAPMessage message = factory.createMessage();
+            SOAPPart soapPart = message.getSOAPPart();
+            SOAPEnvelope envelope = soapPart.getEnvelope();
+            
+            envelope.addNamespaceDeclaration("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            envelope.addNamespaceDeclaration("xsd", "http://www.w3.org/2001/XMLSchema");
+
+            message.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, "UTF-8");
+            message.setProperty(SOAPMessage.WRITE_XML_DECLARATION, "true");
+            
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			message.writeTo(out);
+			soapMessage = new String(out.toByteArray());
+			
+			System.out.println("cabecalho soap: "+soapMessage);
+			
+			return soapMessage;
+		}
+		catch (SOAPException e) {
+			throw new SOAPException(e);
+		} 
+		catch (IOException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	public static String getTipoDocumento(String documento) {
+		String tipoDocumento = "";
+		
+		if(!StringUtils.isEmpty(documento)){
+			tipoDocumento = documento.length() > 11 ? "1" : "2";
+		}
+		
+		return tipoDocumento;
+	}
+
+	public static Element convertStringToElement(String xml) throws IOException {
+		return convertStringToElement(xml,false);
+	}
+	
+	public static Element convertStringToElement(String xml, boolean aware) throws IOException {
+		ByteArrayInputStream sbis = new ByteArrayInputStream(xml.getBytes());
+		javax.xml.parsers.DocumentBuilderFactory b = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+		Document doc = null;
+		try {
+			b.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
+			b.setNamespaceAware(aware);
+
+			javax.xml.parsers.DocumentBuilder db = b.newDocumentBuilder();
+			doc = db.parse(sbis);
+
+		} catch (final ParserConfigurationException | SAXException | IOException e) {
+			throw new IOException(e);
+		}
+		return doc.getDocumentElement();
+	}
+
+	public static Object xmlToObject(Class<?> clazz, String xml) throws JAXBException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+		Unmarshaller unmarshal = jaxbContext.createUnmarshaller();
+		return unmarshal.unmarshal(new StreamSource(new StringReader(xml)));
+	}
+	
+	public static Object xmlToObject(Class<?> clazz, Element xml) throws JAXBException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+		Unmarshaller unmarshal = jaxbContext.createUnmarshaller();
+		return unmarshal.unmarshal(new DOMSource(xml));
+	}
+
 }
