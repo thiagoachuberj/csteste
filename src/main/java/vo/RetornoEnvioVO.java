@@ -32,7 +32,7 @@ public class RetornoEnvioVO extends BaseVO {
 		return retornoEnvio;
 	}
 	public void setRetornoEnvioObjeto(Object xmlToObject) {
-		this.retornoEnvioObjeto = retornoEnvioObjeto;
+		this.retornoEnvioObjeto = xmlToObject;
 	}
 	public Object getRetornoEnvioObjeto() {
 		return retornoEnvioObjeto;
