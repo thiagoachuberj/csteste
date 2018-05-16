@@ -3,7 +3,6 @@
  */
 package vo;
 
-import util.EStatusEnvio;
 import util.ETipoErro;
 
 /**
@@ -13,18 +12,9 @@ import util.ETipoErro;
 public class BaseVO {
 
 	private String tipoEvento;
-	private EStatusEnvio status;
 	private ETipoErro tipoErro;
 	private String mensagem;
 	
-	public EStatusEnvio getStatus() {
-		return status;
-	}
-
-	public void setStatus(EStatusEnvio status) {
-		this.status = status;
-	}
-
 	public ETipoErro getTipoErro() {
 		return tipoErro;
 	}

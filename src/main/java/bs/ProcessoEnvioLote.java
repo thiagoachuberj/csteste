@@ -15,7 +15,6 @@ import lote.retornoEnvio.ESocial;
 import message.SystemPropertiesMessage;
 import util.Aux_String;
 import util.Constantes;
-import util.EStatusEnvio;
 import util.ETipoErro;
 import util.OnCert;
 import util.SocketFactoryDinamico;
@@ -61,7 +60,6 @@ public class ProcessoEnvioLote {
 			System.out.println(result.getEnviarLoteEventosResult().getExtraElement().toString());
 			
 			retornoEnvioVO.setProtocolo(Aux_String.subStrIntoDelim(result.getEnviarLoteEventosResult().getExtraElement().toString(), "<protocoloEnvio>", "</protocoloEnvio>", true));
-			retornoEnvioVO.setStatus(EStatusEnvio.SUCESSO);
 			retornoEnvioVO.setMensagem("Envio realizado com sucesso.");
 			retornoEnvioVO.setLoteEnviado(loteEventos);
 			retornoEnvioVO.setRetornoEnvio(result.getEnviarLoteEventosResult().getExtraElement().toString());
@@ -71,7 +69,6 @@ public class ProcessoEnvioLote {
 		catch (Exception ex) {
 			LOG.error(" ERRO ==>> ", ex);
 			//throw new BusinessException(ex);
-			retornoEnvioVO.setStatus(EStatusEnvio.FALHA);
 			retornoEnvioVO.setLoteEnviado(loteEventos);
 			retornoEnvioVO.setTipoErro(ETipoErro.ENVIO);
 		}

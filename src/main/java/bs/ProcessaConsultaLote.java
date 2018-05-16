@@ -12,7 +12,6 @@ import org.apache.commons.httpclient.protocol.Protocol;
 import consulta.retornoProcessamento.ESocial;
 import message.SystemPropertiesMessage;
 import util.Constantes;
-import util.EStatusEnvio;
 import util.OnCert;
 import util.SocketFactoryDinamico;
 import util.Util;
@@ -53,16 +52,13 @@ public class ProcessaConsultaLote {
 			System.out.println(resultCLE.getConsultarLoteEventosResult().getExtraElement().toString());
 	
 			vo.setXmlDaConsulta(xmlConsulta);
-			vo.setStatus(EStatusEnvio.SUCESSO);
 			vo.setResultadoConsulta(resultCLE.getConsultarLoteEventosResult().getExtraElement().toString());
 			vo.setResultadoConsultaObjeto(Util.xmlToObject(ESocial.class, vo.getResultadoConsulta()));			
-		} 
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 			vo.setXmlDaConsulta(xmlConsulta);
-			vo.setStatus(EStatusEnvio.FALHA);
 			vo.setMensagem(e.toString());
-			vo.setTipoErro(null);
 		} 
 		
 		return vo;

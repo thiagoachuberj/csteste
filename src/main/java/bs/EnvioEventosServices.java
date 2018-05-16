@@ -10,12 +10,9 @@ import org.xml.sax.SAXException;
 
 import exception.BusinessException;
 import message.SystemPropertiesMessage;
-import util.EStatusEnvio;
 import util.ETipoErro;
 import vo.EntradaEnvioVO;
 import vo.RetornoEnvioVO;
-import xml.XmlDocumentBuildFactory;
-import xml.XmlValidationResolver;
 
 public class EnvioEventosServices implements IEnvioEventosService {
 
@@ -43,7 +40,6 @@ public class EnvioEventosServices implements IEnvioEventosService {
 				lstEventosAssinados = assinaturaEventos.assina(entrada.getLstEventosVO());
 			}
 			catch(BusinessException ex) {
-				retornoEnvioVO.setStatus(EStatusEnvio.FALHA);
 				retornoEnvioVO.setTipoErro(ETipoErro.ASSINATURA);
 				retornoEnvioVO.setMensagem(ex.toString());
 			}
@@ -56,7 +52,6 @@ public class EnvioEventosServices implements IEnvioEventosService {
 					loteEventos = montagemLote.montaLote(lstEventosAssinados, entrada.getGrupoLote(), entrada.getNumeroEmissor(), entrada.getNumeroTransmissor());
 				}
 				catch(BusinessException ex) {
-					retornoEnvioVO.setStatus(EStatusEnvio.FALHA);
 					retornoEnvioVO.setTipoErro(ETipoErro.MONTAGEM_LOTE);
 					retornoEnvioVO.setMensagem(ex.toString());
 				}

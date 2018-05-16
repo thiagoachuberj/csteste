@@ -45,6 +45,7 @@ import javax.xml.crypto.dsig.keyinfo.KeyInfo;
 import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
 import javax.xml.crypto.dsig.keyinfo.X509Data;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
+import javax.xml.crypto.dsig.spec.SignatureMethodParameterSpec;
 import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -535,13 +536,16 @@ public class OnCert {
 	 * @throws CertificadoException 
      */
 	public static String assinarCertificado(byte[] xml) throws BusinessException {
-		XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+		//XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+		XMLSignatureFactory fac = XMLSignatureFactory.getInstance(); 
 		try {
-			final Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA1, null),
+			final Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA256, null),
 					Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)), null, null);
 
-			SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),
-					fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null), Collections.singletonList(ref));
+			SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),/*,
+					fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null)*/
+					fac.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", (SignatureMethodParameterSpec) null), 
+					Collections.singletonList(ref));
 
 			final KeyStore ks = KeyStore.getInstance(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE));
 			

@@ -31,7 +31,7 @@ public class ConsultaProcessamentoLoteService implements IConsultaProcessamentoL
 
 	public static void main(String[] args) throws BusinessException {
 		ConsultaProcessamentoLoteService service = new ConsultaProcessamentoLoteService();
-		System.out.println(service.realizarConsultaProcessamento("1.2.201804.0000000000007369608"));
+		System.out.println(service.realizarConsultaProcessamento("1.2.201805.0000000000003400999"));//"1.2.201805.0000000000002934749"));
 	}
 	
 }
