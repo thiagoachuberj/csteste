@@ -1,11 +1,7 @@
 package bs;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import exception.BusinessException;
 import util.OnCert;
-import util.OnCert.TAssinaXML;
 import util.Util;
 import vo.BaseVO;
 import xml.XmlDocumentBuildFactory;
