@@ -36,6 +36,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import bs.MontaXmlConsulta;
+import consulta.envioConsulta.ESocial;
+import consulta.envioConsulta.ESocial.ConsultaLoteEventos;
+import exception.BusinessException;
 import xml.XmlDocumentBuildFactory;
 
 public final class Util {
@@ -49,27 +53,29 @@ public final class Util {
 		return document;
 	}
 	
-	public static StringWriter convertObjectInXML(Object object) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static StringWriter convertObjectInXML(Object object) throws JAXBException {
 		StringWriter sw = null;
 		
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(object.getClass().getPackage().getName());
-			JAXBElement<?> element = new JAXBElement(new QName("http://www.w3.org/2000/09/xmldsig#", "eSocial"), object.getClass(), object);
+			JAXBElement<?> element = new JAXBElement(new QName("eSocial"), object.getClass(), object);
 			Marshaller marshaller = jaxbContext.createMarshaller();
-			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.FALSE);
+			marshaller.setProperty("jaxb.fragment", Boolean.TRUE);
 			sw = new StringWriter();
 			marshaller.marshal(element, sw);
+			
+			return sw;
 		}
 		catch(JAXBException ex) {
-			ex.printStackTrace();
+			throw ex;
 		}
-		
-		return sw;
 	}
 	
 	public static String formataNameSpace(String evento) {		
 		String str = evento.replaceAll(" xmlns:ns2=\"http://www.w3.org/2000/09/xmldsig#\"", "");
-		str = str.replaceAll(":ns3", "");
+		str = str.replaceAll(":ns2", "").replaceAll(":ns3", "");
 		str = str.replaceAll("ns2:", "").replaceAll("ns3:", "");
 		
 		return str;
@@ -103,12 +109,6 @@ public final class Util {
 	}
 	
 	public static String createTemplateSoapMessage() throws SOAPException, IOException {
-		/*sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-		sb.append("<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
-		sb.append(" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"");
-		sb.append(" xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\">");
-		sb.append(" <soap:Header/>");
-		sb.append(" <soap:Body>");*/
 		String soapMessage = "";
 		
 		try {
@@ -120,20 +120,18 @@ public final class Util {
             envelope.addNamespaceDeclaration("xsi", "http://www.w3.org/2001/XMLSchema-instance");
             envelope.addNamespaceDeclaration("xsd", "http://www.w3.org/2001/XMLSchema");
 
-            message.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, "UTF-8");
             message.setProperty(SOAPMessage.WRITE_XML_DECLARATION, "true");
+            message.setProperty(SOAPMessage.CHARACTER_SET_ENCODING, "UTF-8");
             
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			message.writeTo(out);
 			soapMessage = new String(out.toByteArray());
 			
-			System.out.println("cabecalho soap: "+soapMessage);
-			
 			return soapMessage;
 		}
 		catch (SOAPException e) {
 			throw new SOAPException(e);
-		} 
+		}
 		catch (IOException e) {
 			throw new IOException(e);
 		}
@@ -182,24 +180,35 @@ public final class Util {
 		return unmarshal.unmarshal(new DOMSource(xml));
 	}
 	
-	public static String obterValorElemento(Element elemento, String noPrincipal, String noFilho) {
-		String valor = null;
-		NodeList identificadorEmpregador = elemento.getElementsByTagName(noPrincipal);
-		Node primeiroNo = identificadorEmpregador.item(0).getFirstChild();
-
-		while (primeiroNo != null) {
-			if (primeiroNo.getNodeName() == null) {
-				continue;
-			}
-
-			if (noFilho.equals(primeiroNo.getNodeName())) {
-				valor = primeiroNo.getTextContent();
-			}
-			primeiroNo = primeiroNo.getNextSibling();
-		}
-		return valor;
+	public static NodeList getNodeList(Element element, String tagName) {
+		NodeList nodeValue = element.getElementsByTagName(tagName);
+		return nodeValue;
 	}
 
+	public static String omitirDeclaracaoXml(Element elem, String omitirDeclaracaoXml, String identXml) throws TransformerException, IOException {
+		TransformerFactory tf = TransformerFactory.newInstance();
+		Transformer transformer = tf.newTransformer();
+		StringWriter writer = new StringWriter();
+
+		transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitirDeclaracaoXml);
+		transformer.setOutputProperty(OutputKeys.INDENT, identXml);
+		transformer.transform(new DOMSource(elem), new StreamResult(writer));
+
+		return writer.toString();
+	}
+	
+	public static String removeDeclaracaoXML(String decaracao, String xml) {
+		String novoXML = null;
+		if(decaracao != null) {
+			novoXML = xml.replaceAll(decaracao, "");
+		}
+		else {
+			novoXML = xml.replaceAll("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
+		}
+		
+		return novoXML;
+	}
+	
 	public static String nodeToString(Node node, final boolean omitirDeclaracaoXml) throws IOException {
     	StringWriter sw = new StringWriter();
 
@@ -217,9 +226,41 @@ public final class Util {
     	return sw.toString();
     }
 	
-	public static void main(String []args) {
-		String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?> <ns2:eSocial xmlns:ns2=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ns3=\"http://www.esocial.gov.br/schema/evt/evtInfoEmpregador/v02_04_02\">     <ns3:evtInfoEmpregador Id=\"ID1103687170001442018041713182000000\">         <ns3:ideEvento>             <ns3:tpAmb>2</ns3:tpAmb>             <ns3:procEmi>0</ns3:procEmi>             <ns3:verProc>0</ns3:verProc>         </ns3:ideEvento>         <ns3:ideEmpregador>             <ns3:tpInsc>1</ns3:tpInsc>             <ns3:nrInsc>123456789</ns3:nrInsc>         </ns3:ideEmpregador>         <ns3:infoEmpregador>             <ns3:inclusao>                 <ns3:idePeriodo>                     <ns3:iniValid>2017-01</ns3:iniValid>                     <ns3:fimValid>2017-02</ns3:fimValid>                 </ns3:idePeriodo>                 <ns3:infoCadastro>                     <ns3:nmRazao>Teste 123</ns3:nmRazao>                     <ns3:classTrib>10</ns3:classTrib>                     <ns3:natJurid>0000</ns3:natJurid>                     <ns3:indCoop>0</ns3:indCoop>                     <ns3:indConstr>0</ns3:indConstr>                     <ns3:indDesFolha>0</ns3:indDesFolha>                     <ns3:indOptRegEletron>0</ns3:indOptRegEletron>                     <ns3:indEntEd>N</ns3:indEntEd>                     <ns3:indEtt>N</ns3:indEtt>                     <ns3:nrRegEtt>12345678910</ns3:nrRegEtt>                     <ns3:dadosIsencao>                         <ns3:ideMinLei>ok</ns3:ideMinLei>                         <ns3:nrCertif>numero</ns3:nrCertif>                         <ns3:dtEmisCertif>2018-05-15</ns3:dtEmisCertif>                         <ns3:dtVencCertif>2018-05-15</ns3:dtVencCertif>                         <ns3:nrProtRenov>numero</ns3:nrProtRenov>                         <ns3:dtProtRenov>2018-05-15</ns3:dtProtRenov>                         <ns3:dtDou>2018-05-15</ns3:dtDou>                         <ns3:pagDou>10</ns3:pagDou>                     </ns3:dadosIsencao>                     <ns3:contato>                         <ns3:nmCtt>testeContato</ns3:nmCtt>                         <ns3:cpfCtt>09063372752</ns3:cpfCtt>                         <ns3:foneFixo>2122222222</ns3:foneFixo>                         <ns3:foneCel>21999999999</ns3:foneCel>                         <ns3:email>thiago@thiago.com</ns3:email>                     </ns3:contato>                     <ns3:infoOP>                         <ns3:nrSiafi>789</ns3:nrSiafi>                         <ns3:infoEFR>                             <ns3:ideEFR>S</ns3:ideEFR>                             <ns3:cnpjEFR>12345678912345</ns3:cnpjEFR>                         </ns3:infoEFR>                         <ns3:infoEnte>                             <ns3:nmEnte>ENTE</ns3:nmEnte>                             <ns3:uf>RJ</ns3:uf>                             <ns3:codMunic>10</ns3:codMunic>                             <ns3:indRPPS>S</ns3:indRPPS>                             <ns3:subteto>0</ns3:subteto>                             <ns3:vrSubteto>10</ns3:vrSubteto>                         </ns3:infoEnte>                     </ns3:infoOP>                     <ns3:infoOrgInternacional>                         <ns3:indAcordoIsenMulta>0</ns3:indAcordoIsenMulta>                     </ns3:infoOrgInternacional>                     <ns3:infoComplementares>                         <ns3:situacaoPJ>                             <ns3:indSitPJ>0</ns3:indSitPJ>                         </ns3:situacaoPJ>                         <ns3:situacaoPF>                             <ns3:indSitPF>0</ns3:indSitPF>                         </ns3:situacaoPF>                     </ns3:infoComplementares>                 </ns3:infoCadastro>             </ns3:inclusao>         </ns3:infoEmpregador>     </ns3:evtInfoEmpregador> </ns2:eSocial>";
+	public static void main(String []args) throws IOException, SOAPException, JAXBException, BusinessException {
+		StringBuilder sb = new StringBuilder();
+		String str = createTemplateSoapMessage();
 		
-		System.out.println(Util.formataNameSpace(str));
+		System.out.println("antes: "+str);
+		sb.append(str.substring(0, str.indexOf("<soapenv:Body>")+14));
+		System.out.println("depois: "+str);
+		
+		ESocial esocial = new ESocial();
+		ConsultaLoteEventos cle = new ConsultaLoteEventos();
+		cle.setProtocoloEnvio("1.2.201805.0000000000003400999");
+		esocial.setConsultaLoteEventos(cle);
+		
+		StringWriter swter = Util.convertObjectInXML(esocial) ;
+		
+		sb.append(swter.toString());
+		sb.append(str.substring(str.indexOf("</soapenv:Body>")));
+		
+		String novostr = Util.formataNameSpace(sb.toString());
+		
+		System.out.println("SOAP ENVELOPE: "+ novostr);
+		//String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?> <ns2:eSocial xmlns:ns2=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:ns3=\"http://www.esocial.gov.br/schema/evt/evtInfoEmpregador/v02_04_02\">     <ns3:evtInfoEmpregador Id=\"ID1103687170001442018041713182000000\">         <ns3:ideEvento>             <ns3:tpAmb>2</ns3:tpAmb>             <ns3:procEmi>0</ns3:procEmi>             <ns3:verProc>0</ns3:verProc>         </ns3:ideEvento>         <ns3:ideEmpregador>             <ns3:tpInsc>1</ns3:tpInsc>             <ns3:nrInsc>123456789</ns3:nrInsc>         </ns3:ideEmpregador>         <ns3:infoEmpregador>             <ns3:inclusao>                 <ns3:idePeriodo>                     <ns3:iniValid>2017-01</ns3:iniValid>                     <ns3:fimValid>2017-02</ns3:fimValid>                 </ns3:idePeriodo>                 <ns3:infoCadastro>                     <ns3:nmRazao>Teste 123</ns3:nmRazao>                     <ns3:classTrib>10</ns3:classTrib>                     <ns3:natJurid>0000</ns3:natJurid>                     <ns3:indCoop>0</ns3:indCoop>                     <ns3:indConstr>0</ns3:indConstr>                     <ns3:indDesFolha>0</ns3:indDesFolha>                     <ns3:indOptRegEletron>0</ns3:indOptRegEletron>                     <ns3:indEntEd>N</ns3:indEntEd>                     <ns3:indEtt>N</ns3:indEtt>                     <ns3:nrRegEtt>12345678910</ns3:nrRegEtt>                     <ns3:dadosIsencao>                         <ns3:ideMinLei>ok</ns3:ideMinLei>                         <ns3:nrCertif>numero</ns3:nrCertif>                         <ns3:dtEmisCertif>2018-05-15</ns3:dtEmisCertif>                         <ns3:dtVencCertif>2018-05-15</ns3:dtVencCertif>                         <ns3:nrProtRenov>numero</ns3:nrProtRenov>                         <ns3:dtProtRenov>2018-05-15</ns3:dtProtRenov>                         <ns3:dtDou>2018-05-15</ns3:dtDou>                         <ns3:pagDou>10</ns3:pagDou>                     </ns3:dadosIsencao>                     <ns3:contato>                         <ns3:nmCtt>testeContato</ns3:nmCtt>                         <ns3:cpfCtt>09063372752</ns3:cpfCtt>                         <ns3:foneFixo>2122222222</ns3:foneFixo>                         <ns3:foneCel>21999999999</ns3:foneCel>                         <ns3:email>thiago@thiago.com</ns3:email>                     </ns3:contato>                     <ns3:infoOP>                         <ns3:nrSiafi>789</ns3:nrSiafi>                         <ns3:infoEFR>                             <ns3:ideEFR>S</ns3:ideEFR>                             <ns3:cnpjEFR>12345678912345</ns3:cnpjEFR>                         </ns3:infoEFR>                         <ns3:infoEnte>                             <ns3:nmEnte>ENTE</ns3:nmEnte>                             <ns3:uf>RJ</ns3:uf>                             <ns3:codMunic>10</ns3:codMunic>                             <ns3:indRPPS>S</ns3:indRPPS>                             <ns3:subteto>0</ns3:subteto>                             <ns3:vrSubteto>10</ns3:vrSubteto>                         </ns3:infoEnte>                     </ns3:infoOP>                     <ns3:infoOrgInternacional>                         <ns3:indAcordoIsenMulta>0</ns3:indAcordoIsenMulta>                     </ns3:infoOrgInternacional>                     <ns3:infoComplementares>                         <ns3:situacaoPJ>                             <ns3:indSitPJ>0</ns3:indSitPJ>                         </ns3:situacaoPJ>                         <ns3:situacaoPF>                             <ns3:indSitPF>0</ns3:indSitPF>                         </ns3:situacaoPF>                     </ns3:infoComplementares>                 </ns3:infoCadastro>             </ns3:inclusao>         </ns3:infoEmpregador>     </ns3:evtInfoEmpregador> </ns2:eSocial>";
+		
+		//System.out.println(Util.formataNameSpace(str));
+		//String xmlFormatado = Util.formataNameSpace(str);
+		
+		//NodeList nodeList = Util.getNodeList(convertStringToElement(xmlFormatado), "infoEmpregador");
+		
+		//System.out.println(nodeList);
+		
+		/*for(int i = 0; i < nodeList.getLength(); i++) {
+			//Node nodeList.item(i);
+		}*/
+		
+		MontaXmlConsulta xmlConsulta = new MontaXmlConsulta();
+		System.out.println(xmlConsulta.montarXml("1.2.201805.0000000000003400999"));
 	}
 }

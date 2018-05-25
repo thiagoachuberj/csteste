@@ -55,22 +55,18 @@ public class ProcessoEnvioLote {
 
 			ServicoEnviarLoteEventosStub stub = new ServicoEnviarLoteEventosStub(urlELE.toString());
 			ServicoEnviarLoteEventosStub.EnviarLoteEventosResponse result = stub.enviarLoteEventos(distEnvioEsocial);
-			result.getEnviarLoteEventosResult().getExtraElement().toString();
 
 			System.out.println(result.getEnviarLoteEventosResult().getExtraElement().toString());
 			
 			retornoEnvioVO.setProtocolo(Aux_String.subStrIntoDelim(result.getEnviarLoteEventosResult().getExtraElement().toString(), "<protocoloEnvio>", "</protocoloEnvio>", true));
-			retornoEnvioVO.setMensagem("Envio realizado com sucesso.");
 			retornoEnvioVO.setLoteEnviado(loteEventos);
 			retornoEnvioVO.setRetornoEnvio(result.getEnviarLoteEventosResult().getExtraElement().toString());
 			retornoEnvioVO.setRetornoEnvioObjeto(Util.xmlToObject(ESocial.class, retornoEnvioVO.getRetornoEnvio()));
 			System.out.println(retornoEnvioVO.getProtocolo());
 		} 
 		catch (Exception ex) {
-			LOG.error(" ERRO ==>> ", ex);
-			//throw new BusinessException(ex);
-			retornoEnvioVO.setLoteEnviado(loteEventos);
-			retornoEnvioVO.setTipoErro(ETipoErro.ENVIO);
+			LOG.error("Erro no metodo processa(String loteEventos): ", ex);
+			throw new BusinessException("Erro no metodo processa(String loteEventos): ", ex);
 		}
 	
 		return retornoEnvioVO;

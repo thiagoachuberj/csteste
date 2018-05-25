@@ -6,7 +6,6 @@ package util;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +34,6 @@ import java.util.logging.Logger;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.crypto.dsig.DigestMethod;
 import javax.xml.crypto.dsig.Reference;
-import javax.xml.crypto.dsig.SignatureMethod;
 import javax.xml.crypto.dsig.SignedInfo;
 import javax.xml.crypto.dsig.Transform;
 import javax.xml.crypto.dsig.XMLSignature;
@@ -55,10 +53,9 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.demoiselle.signer.core.keystore.loader.factory.KeyStoreLoaderFactory;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import exception.BusinessException;
+import exception.CertificadoException;
 import message.SystemPropertiesMessage;
 
 /**
@@ -354,28 +351,13 @@ public class OnCert {
 		transformList.add(c14n);
 		NodeList elements = doc.getElementsByTagName(strTipoSign);
 		org.w3c.dom.Element el = (org.w3c.dom.Element) elements.item(0);
-//		String id = el.getAttribute(strID);
 		String id = el.getAttribute("Id");
 		el.setIdAttribute("Id", true);
 																
 		Reference r = sig.newReference("", sig.newDigestMethod("http://www.w3.org/2001/04/xmlenc#sha256", null),
 				transformList,
 				null, null);
-/*		Reference r = sig.newReference("#".concat(id), sig.newDigestMethod("http://www.w3.org/2001/04/xmlenc#sha256", null),
-				transformList,
-				null, null);
-*/
-/*
-        Reference r = sig.newReference("#".concat(id), sig.newDigestMethod(DigestMethod.SHA256, null),
-                transformList,
-                null, null);
 
-        si = sig.newSignedInfo(
-                sig.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE,
-                (C14NMethodParameterSpec) null),
-                sig.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
-                Collections.singletonList(r));
-*/      
 		si = sig.newSignedInfo(
 				sig.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE,
 						(C14NMethodParameterSpec) null),
@@ -403,56 +385,6 @@ public class OnCert {
         
 		return true;
 	}
-/*
-	O m�todo abaixo foi retirado deste endere�o : https://stackoverflow.com/questions/12528667/xml-digital-signature-java
-	para futuros testes.
-	
-	private static Document sign(Document doc) throws InstantiationException, IllegalAccessException, ClassNotFoundException,
-	NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyException, MarshalException, XMLSignatureException,
-	FileNotFoundException, TransformerException 
-	{
-
-		String providerName = System.getProperty("jsr105Provider", "org.jcp.xml.dsig.internal.dom.XMLDSigRI");
-
-		XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM", (Provider) Class.forName(providerName).newInstance());
-
-		DigestMethod digestMethod = fac.newDigestMethod(DigestMethod.SHA256, null);
-		Transform transform = fac.newTransform(ENVELOPED, (TransformParameterSpec) null);
-		Reference reference = fac.newReference("", digestMethod, singletonList(transform), null, null);
-		SignatureMethod signatureMethod = fac.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", null);
-		CanonicalizationMethod canonicalizationMethod = fac.newCanonicalizationMethod(EXCLUSIVE, (C14NMethodParameterSpec) null);
-
-		// Create the SignedInfo
-		SignedInfo si = fac.newSignedInfo(canonicalizationMethod, signatureMethod, singletonList(reference));
-
-
-		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-		kpg.initialize(2048);
-
-		KeyPair kp = kpg.generateKeyPair();
-
-		KeyInfoFactory kif = fac.getKeyInfoFactory();
-		KeyValue kv = kif.newKeyValue(kp.getPublic());
-
-		// Create a KeyInfo and add the KeyValue to it
-		KeyInfo ki = kif.newKeyInfo(Collections.singletonList(kv));
-		DOMSignContext dsc = new DOMSignContext(kp.getPrivate(), doc.getDocumentElement());
-
-		XMLSignature signature = fac.newXMLSignature(si, ki);
-		signature.sign(dsc);
-
-		TransformerFactory tf = TransformerFactory.newInstance();
-		Transformer trans = tf.newTransformer();
-
-		// output the resulting document
-		OutputStream os;
-
-		os = new FileOutputStream("xmlOut.xml");
-
-		trans.transform(new DOMSource(doc), new StreamResult(os));
-		return doc;
-	}    
-*/
 	
 	@SuppressWarnings("restriction")
 	public static TAssinaXML funcAssinaEventoXML(TAssinaXML tpAssinaXML) throws Exception 
@@ -487,12 +419,6 @@ public class OnCert {
 		Transform c14n = sig.newTransform(tpAssinaXML.C14N_TRANSFORM_METHOD, (TransformParameterSpec) null);
 		transformList.add(enveloped);
 		transformList.add(c14n);
-		// NodeList elements = doc.getFirstChild().getChildNodes();//doc.getElementsByTagName(strTipoSign);
-		//org.w3c.dom.Element el = (org.w3c.dom.Element) elements.item(0);
-		// Node el = elements.item(0).getNextSibling().getAttributes().getNamedItem("Id");
-//		String id = el.getAttribute(strID);
-		/*String id = el.getAttribute("Id");
-		el.setIdAttribute("Id", true);*/
 																
 		Reference r = sig.newReference("", sig.newDigestMethod("http://www.w3.org/2001/04/xmlenc#sha256", null),
 				transformList,
@@ -514,9 +440,6 @@ public class OnCert {
 		signature.sign(dsc);		// neste momento � solicitada a senha do token
 		
 		TransformerFactory tf = TransformerFactory.newInstance();
-		/*OutputStream os = new FileOutputStream(tpAssinaXML.strArquivoSaveXML);    //Salvo o XML assinado num arquivo 
-		Transformer trans = tf.newTransformer();
-		trans.transform(new DOMSource(doc), new StreamResult(os));*/
 		
 		StringWriter writer = new StringWriter();								  //Salvo o XML assinado numa propriedade String
 		Transformer transformer = tf.newTransformer();
@@ -527,61 +450,53 @@ public class OnCert {
         return tpAssinaXML;
 	}
 	
-	/**.
-     * Objetivo: metodo responsavel por assinar digitalmente o xml de retorno
-     * @param byte[]
-     * @author CTMONSI
-     * @since 09/02/2015
-     * @version 1.0
-	 * @throws CertificadoException 
-     */
-	public static String assinarCertificado(byte[] xml) throws BusinessException {
-		//XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
-		XMLSignatureFactory fac = XMLSignatureFactory.getInstance(); 
+	public static String assinarCertificado(byte[] xml) throws CertificadoException {
 		try {
+			XMLSignatureFactory fac = XMLSignatureFactory.getInstance(); 
+			
 			final Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA256, null),
 					Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)), null, null);
-
-			SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),/*,
-					fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null)*/
+			
+			SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),
 					fac.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", (SignatureMethodParameterSpec) null), 
 					Collections.singletonList(ref));
-
+			
 			final KeyStore ks = KeyStore.getInstance(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE));
 			
 			final File signerFile = new File(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE));
 			final FileInputStream fis = new FileInputStream(signerFile);
 			ks.load(fis, SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray());
 			fis.close();
-			 
+			
 			final KeyStore.PrivateKeyEntry keyEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_ALIAS),
 					new KeyStore.PasswordProtection(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray()));
 			final X509Certificate cert = (X509Certificate) keyEntry.getCertificate();
-
+			
 			final KeyInfoFactory kif = fac.getKeyInfoFactory();
 			final List<Object> x509Content = new ArrayList<Object>();
 			x509Content.add(cert.getSubjectX500Principal().getName());
 			x509Content.add(cert);
 			final X509Data xd = kif.newX509Data(x509Content);
 			final KeyInfo ki = kif.newKeyInfo(Collections.singletonList(xd));
-
+			
 			final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setNamespaceAware(true);
 			final Document doc = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml));
-
+			
 			final DOMSignContext dsc = new DOMSignContext(keyEntry.getPrivateKey(), doc.getDocumentElement());
 			final XMLSignature signature = fac.newXMLSignature(si, ki);
 			signature.sign(dsc);
 			
-		    StringWriter sw = new StringWriter();
-
+			StringWriter sw = new StringWriter();
+			
 			final TransformerFactory tf = TransformerFactory.newInstance();
 			final Transformer trans = tf.newTransformer();
 			trans.transform(new DOMSource(doc), new StreamResult(sw));
+			
 			return sw.toString();
-		} 
-		catch (Exception e) {
-			throw new BusinessException("Assinatura Inválida", e);
+		}
+		catch(Exception ex) {
+			throw new CertificadoException(ex);
 		}
 	}
 	
@@ -591,28 +506,7 @@ public class OnCert {
 	 * @return
 	 */
 	public static KeyStore funcListaCertificadosDemoiselle() {
-		//String strResult[] = new String[20];
-		Integer intCnt = 0;
-		//KeyStore ks = null;
-		
-		KeyStore ks = KeyStoreLoaderFactory.factoryKeyStoreLoader().getKeyStore();
-		/*jkspkcs11.load(null);
-		Enumeration<String> aliasEnum = jkspkcs11.aliases();
-		
-		while (aliasEnum.hasMoreElements()) {
-			String aliasKey = (String) aliasEnum.nextElement();
-			
-			if (jkspkcs11.isKeyEntry(aliasKey)) {
-				//strResult[intCnt] = aliasKey;
-				ks = 
-			}
-			
-			if (strResult[intCnt] != null) {
-				intCnt = intCnt + 1;
-			}
-		}*/
-		
-		return ks;
+		return KeyStoreLoaderFactory.factoryKeyStoreLoader().getKeyStore();
 	}
 
 	public static KeyStore loadKeystore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {

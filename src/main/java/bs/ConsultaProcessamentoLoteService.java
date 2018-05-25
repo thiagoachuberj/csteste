@@ -4,6 +4,7 @@
 package bs;
 
 import exception.BusinessException;
+import message.SystemPropertiesMessage;
 import vo.RetornoConsultaVO;
 
 /**
@@ -14,16 +15,20 @@ import vo.RetornoConsultaVO;
  */
 public class ConsultaProcessamentoLoteService implements IConsultaProcessamentoLotes {
 
+	private final SystemPropertiesMessage properties;
+
+	public ConsultaProcessamentoLoteService() {
+		properties = SystemPropertiesMessage.getInstance();
+	}
+	
 	/* (non-Javadoc)
 	 * @see bs.IConsultaProcessamentoLotes#realizaConsultaProcessamento(java.lang.String)
 	 */
 	public RetornoConsultaVO realizarConsultaProcessamento(String protocolo) throws BusinessException {
-		//String templateSoapMessage = Util.createTemplateSoapMessage();
-		
 		MontaXmlConsulta montaXmlConsulta = new MontaXmlConsulta();
 		String xmlDaConsulta = montaXmlConsulta.montarXml(protocolo);
 		
-		ProcessaConsultaLote resultadoProcessamento = new ProcessaConsultaLote();
+		ProcessaConsultaLote resultadoProcessamento = new ProcessaConsultaLote(properties);
 		RetornoConsultaVO retoronVO = resultadoProcessamento.consultarProcessamento(xmlDaConsulta);
 		
 		return retoronVO;

@@ -1,19 +1,31 @@
 package bs;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.soap.SOAPException;
 
 import org.apache.log4j.Logger;
 
 import exception.BusinessException;
+import lote.envio.ESocial;
+import lote.envio.ESocial.EnvioLoteEventos;
+import lote.envio.ESocial.EnvioLoteEventos.Eventos;
+import lote.envio.TArquivoEsocial;
+import lote.envio.TIdeEmpregador;
+import lote.envio.TIdeTransmissor;
+import util.Util;
 
 public class MontagemLote {
 
-	private static Logger LOG = Logger.getLogger(MontagemLote.class);
+	private static Logger LOGGER = Logger.getLogger(MontagemLote.class);
 	
 	public MontagemLote() {
 	}
 	
-	public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
+	/*public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
 		StringBuilder sb = new StringBuilder();
 		
 		try {
@@ -63,11 +75,71 @@ public class MontagemLote {
 			//System.out.println("XML SOAP a ser enviado : "+sb.toString());
 		}
 		catch (Exception e) {
-			LOG.error("montaLoteEventos(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) ==>> ", e);
-			throw new BusinessException(e);	
+			LOGGER.error("montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor): ", e);
+			throw new BusinessException("montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor)", e);	
 		}
 
 		return sb.toString();
+	}
+	*/
+	
+	public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
+		try {
+			ESocial loteEnvio = new ESocial();
+			EnvioLoteEventos envioLoteEventos = new EnvioLoteEventos();
+			envioLoteEventos.setGrupo(Integer.parseInt(grupoLote));
+			TIdeEmpregador idEmpregador = new TIdeEmpregador();
+			idEmpregador.setTpInsc(numeroEmissor.length() > 11 ? new Byte("1") : new Byte("2"));
+			idEmpregador.setNrInsc(numeroEmissor);
+			envioLoteEventos.setIdeEmpregador(idEmpregador);
+			TIdeTransmissor ideTransmissor = new TIdeTransmissor();
+			ideTransmissor.setTpInsc(numeroTransmissor.length() > 11 ? new Byte("1") : new Byte("2"));
+			ideTransmissor.setNrInsc(numeroTransmissor);
+			envioLoteEventos.setIdeTransmissor(ideTransmissor);
+			
+			Eventos eventos = new Eventos();
+			for(String str : lstEventosAssinados) {
+				String idEvento = str.substring(str.indexOf("Id=\"") + 4, str.indexOf("Id=\"") + 40 );
+				TArquivoEsocial evento = new TArquivoEsocial();
+				evento.setId(idEvento);
+				evento.setAny(Util.convertStringToElement(str));
+				
+				eventos.getEvento().add(evento);
+			}
+			
+			envioLoteEventos.setEventos(eventos);
+			loteEnvio.setEnvioLoteEventos(envioLoteEventos);
+			
+			String templateSoap = Util.createTemplateSoapMessage();
+			StringBuilder sb = new StringBuilder();
+			StringWriter swriter = Util.convertObjectInXML(loteEnvio);
+			
+			switch (templateSoap.indexOf("<soapenv:Body>")) { 
+			case -1:
+				sb.append(templateSoap.substring(0, templateSoap.indexOf("<soapenv:Body />")));
+				sb.append("<soapenv:Body>");
+				sb.append(swriter.toString());
+				sb.append("</soapenv:Body>");
+				sb.append("</soapenv:Envelope>");
+				break;
+				
+			default:
+				sb.append(templateSoap.substring(0, templateSoap.indexOf("<soapenv:Body>")+14));
+				sb.append(swriter.toString());
+				sb.append(templateSoap.substring(templateSoap.indexOf("</soapenv:Body>")));
+				break;
+			}
+			
+			return Util.formataNameSpace(sb.toString());
+		}
+		catch (SOAPException | IOException e) {
+			LOGGER.error("Erro no metodo Util.createTemplateSoapMessage(): ", e);
+			throw new BusinessException("Erro no metodo Util.createTemplateSoapMessage(): ", e);
+		} 
+		catch (JAXBException e) {
+			LOGGER.error("Erro no metodo Util.convertObjectInXML(esocial): ", e);
+			throw new BusinessException("Erro no metodo Util.createTemplateSoapMessage(): ", e);
+		}
 	}
 	
 }

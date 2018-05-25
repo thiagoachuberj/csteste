@@ -10,9 +10,11 @@ import java.util.List;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.util.AXIOMUtil;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.log4j.Logger;
 
 import consulta.retornoProcessamento.ESocial;
 import consulta.retornoProcessamento.ESocial.RetornoProcessamentoLoteEventos.RetornoEventos.Evento;
+import exception.BusinessException;
 import message.SystemPropertiesMessage;
 import util.Constantes;
 import util.OnCert;
@@ -23,14 +25,18 @@ import ws.consulta.ServicoConsultarLoteEventosStub;
 
 public class ProcessaConsultaLote {
 	
-	private static final String HTTPS = "https";
-	private static String URL_CONSULTA = "https://webservices.producaorestrita.esocial.gov.br/servicos/empregador/consultarloteeventos/WsConsultarLoteEventos.svc"; 
+	private static final Logger LOGGER = Logger.getLogger(ProcessaConsultaLote.class);
+	private final SystemPropertiesMessage properties;
 	
-	public RetornoConsultaVO consultarProcessamento(String xmlConsulta) {
+	public ProcessaConsultaLote(SystemPropertiesMessage properties) {
+		this.properties = properties;
+	}
+	
+	public RetornoConsultaVO consultarProcessamento(String xmlConsulta) throws BusinessException {
 		RetornoConsultaVO vo = new RetornoConsultaVO();
 		
 		try {
-			URL urlCLE = new URL(URL_CONSULTA);
+			URL urlCLE = new URL(properties.getValueKey(Constantes.URL_CONSULTA_LOTE_EVENTOS));
 			
 			KeyStore keystore = OnCert.loadKeystore();
 			
@@ -39,8 +45,8 @@ public class ProcessaConsultaLote {
 			SocketFactoryDinamico socketFactoryDinamico = new SocketFactoryDinamico(certificate, privateKey);
 			socketFactoryDinamico.setFileCacerts(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.PATH_CERT_DOMAIN));
 
-			Protocol protocol = new Protocol(HTTPS, socketFactoryDinamico, Integer.parseInt(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.PORT_SSL)));
-			Protocol.registerProtocol(HTTPS, protocol);
+			Protocol protocol = new Protocol("https", socketFactoryDinamico, Integer.parseInt(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.PORT_SSL)));
+			Protocol.registerProtocol("https", protocol);
 		
 			OMElement omeCLE = AXIOMUtil.stringToOM(xmlConsulta);
 			ServicoConsultarLoteEventosStub.Consulta_type0 dadosMsgTypeCLE = new ServicoConsultarLoteEventosStub.Consulta_type0();
@@ -48,13 +54,13 @@ public class ProcessaConsultaLote {
 	
 			ServicoConsultarLoteEventosStub.ConsultarLoteEventos distEnvioESocial = new ServicoConsultarLoteEventosStub.ConsultarLoteEventos();
 			distEnvioESocial.setConsulta(dadosMsgTypeCLE);
-
+	
 			ServicoConsultarLoteEventosStub stubCLE = new ServicoConsultarLoteEventosStub(urlCLE.toString());
 			ServicoConsultarLoteEventosStub.ConsultarLoteEventosResponse resultCLE = stubCLE.consultarLoteEventos(distEnvioESocial); 
-
+	
 			System.out.println(resultCLE.getConsultarLoteEventosResult().getExtraElement().toString());
-
-			vo.setXmlDaConsulta(xmlConsulta);
+	
+						vo.setXmlDaConsulta(xmlConsulta);
 			vo.setResultadoConsulta(resultCLE.getConsultarLoteEventosResult().getExtraElement().toString());
 			vo.setResultadoConsultaObjeto(Util.xmlToObject(ESocial.class, vo.getResultadoConsulta()));
 		
@@ -82,10 +88,9 @@ public class ProcessaConsultaLote {
 			}
 		}
 		catch (Exception e) {
-			//TODO: logar excecao
-			vo.setXmlDaConsulta(xmlConsulta);
-			vo.setMensagem(e.toString());
-		}
+			LOGGER.error("Erro no metodo consultarProcessamento(String xmlConsulta): ", e);
+			throw new BusinessException("Erro no metodo consultarProcessamento(String xmlConsulta): ", e);
+		} 
 		
 		return vo;
 	}

@@ -1,13 +1,17 @@
 package bs;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.log4j.Logger;
 
 import exception.BusinessException;
+import exception.CertificadoException;
 import util.OnCert;
 import util.Util;
 import vo.BaseVO;
@@ -40,12 +44,22 @@ public class AssinaturaEventos {
 
 				String eventoXMLAssinado = OnCert.assinarCertificado(dadosAssinatura.strArquivoXML.getBytes(StandardCharsets.UTF_8));
 				
+				Util.validarXml(xmlFactory, eventoXMLAssinado.getBytes(StandardCharsets.UTF_8));
+				
 				lstXml.add(eventoXMLAssinado);
 			}
 		}
-		catch (Exception e) {
-			LOG.error("assinaEventos(List<BaseVO> lstEventos) ==>> ", e);
-			throw new BusinessException(e);
+		catch (CertificadoException e) {
+			LOG.error("Erro no metodo \"OnCert.assinarCertificado\": ", e);
+			throw new BusinessException("Erro no metodo \"OnCert.assinarCertificado\": ", e);
+		} 
+		catch (JAXBException e) {
+			LOG.error("Erro no metodo \"Util.convertObjectInXML\": ", e);
+			throw new BusinessException("Erro no metodo \"Util.convertObjectInXML\": ", e);
+		} 
+		catch (IOException e) {
+			LOG.error("Erro no metodo \"Util.validarXml\": ", e);
+			throw new BusinessException("Erro no metodo \"Util.validarXml\": ", e);
 		}
 				
 		return lstXml;

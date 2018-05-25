@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,12 +33,13 @@ public class XmlValidationResolver implements EntityResolver, LSResourceResolver
 	private static final long serialVersionUID = -1295625353829960138L;
 	final Map<String, DomInputSource> schemas;
 	final Map<String, DomInputSource> dtds = null;
-
+	
 	public XmlValidationResolver(final String xsdPath) throws IOException, XMLStreamException {
 		schemas = new HashMap<String, DomInputSource>();
 		List<File> list = new ArrayList<File>(128);
-//		String theString = IOUtils.toString(XmlValidationResolver.class.getResourceAsStream(xsdPath), "UTF-8");
-		listFiles(new File(xsdPath), list, ".xsd" );
+		//String theString = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream(xsdPath), "UTF-8");
+		URL url = Thread.currentThread().getContextClassLoader().getResource(xsdPath);
+		listFiles(new File(xsdPath/*url.getPath()*/), list, ".xsd" );
 		
 		File[] files = new File[list.size()];
 		files = list.toArray(files);
