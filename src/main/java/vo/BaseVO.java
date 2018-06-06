@@ -14,6 +14,7 @@ public class BaseVO {
 	private String tipoEvento;
 	private ETipoErro tipoErro;
 	private String mensagem;
+	private String id;
 	
 	public ETipoErro getTipoErro() {
 		return tipoErro;
@@ -37,6 +38,14 @@ public class BaseVO {
 	
 	public String getTipoEvento() {
 		return tipoEvento;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 	
 }

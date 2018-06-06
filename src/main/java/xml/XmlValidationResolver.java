@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +20,6 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.apache.commons.io.IOUtils;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.EntityResolver;
@@ -38,8 +36,8 @@ public class XmlValidationResolver implements EntityResolver, LSResourceResolver
 		schemas = new HashMap<String, DomInputSource>();
 		List<File> list = new ArrayList<File>(128);
 		//String theString = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream(xsdPath), "UTF-8");
-		URL url = Thread.currentThread().getContextClassLoader().getResource(xsdPath);
-		listFiles(new File(xsdPath/*url.getPath()*/), list, ".xsd" );
+		//URL url = Thread.currentThread().getContextClassLoader().getResource(xsdPath);
+		listFiles(new File(xsdPath), list, ".xsd" );
 		
 		File[] files = new File[list.size()];
 		files = list.toArray(files);

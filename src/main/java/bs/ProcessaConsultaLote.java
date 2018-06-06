@@ -36,7 +36,7 @@ public class ProcessaConsultaLote {
 		RetornoConsultaVO vo = new RetornoConsultaVO();
 		
 		try {
-			URL urlCLE = new URL(properties.getValueKey(Constantes.URL_CONSULTA_LOTE_EVENTOS));
+			URL urlCLE = new URL("https://webservices.producaorestrita.esocial.gov.br/servicos/empregador/consultarloteeventos/WsConsultarLoteEventos.svc"/*properties.getValueKey(Constantes.URL_CONSULTA_LOTE_EVENTOS)*/);
 			
 			KeyStore keystore = OnCert.loadKeystore();
 			

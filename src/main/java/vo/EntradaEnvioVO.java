@@ -33,5 +33,11 @@ public class EntradaEnvioVO extends BaseVO {
 	public void setNumeroTransmissor(String numeroTransmissor) {
 		this.numeroTransmissor = numeroTransmissor;
 	}
-
+	
+	@Override
+	public String toString() {
+		return "EntradaEnvioVO [lstEventosVO=" + lstEventosVO + ", grupoLote=" + grupoLote + ", numeroEmissor="
+				+ numeroEmissor + ", numeroTransmissor=" + numeroTransmissor + "]";
+	}
+	
 }

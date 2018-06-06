@@ -73,7 +73,7 @@ public class MontaXmlConsulta {
 					break;
 			}			
 			
-			return Util.formataNameSpace(sb.toString());
+			return Util.formataNameSpaceEvento(sb.toString());
 		} 
 		catch (SOAPException | IOException e) {
 			LOGGER.error("Erro no metodo Util.createTemplateSoapMessage(): ", e);

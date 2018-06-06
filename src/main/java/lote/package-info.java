@@ -5,5 +5,5 @@
 // Gerado em: 2018.02.05 às 08:50:21 PM BRST 
 //
 
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.esocial.gov.br/schema/empregador/lote/eventos/envio/v1_0_0", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://www.esocial.gov.br/schema/empregador/lote/eventos/envio/v1_0_0", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED, xmlns = {@javax.xml.bind.annotation.XmlNs(namespaceURI="http://www.esocial.gov.br/schema/empregador/lote/eventos/envio/v1_0_0", prefix="")})
 package lote;

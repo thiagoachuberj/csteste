@@ -6,6 +6,7 @@ package util;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,6 +69,8 @@ import message.SystemPropertiesMessage;
  * Soulslinux Onvaid Marques
  */
 public class OnCert {
+	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(OnCert.class);
+	
 	//Procedimento que retorna o Keystore
 	public static KeyStore funcKeyStore(String strAliasTokenCert) throws NoSuchProviderException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableEntryException 
 	{
@@ -451,25 +454,35 @@ public class OnCert {
 	}
 	
 	public static String assinarCertificado(byte[] xml) throws CertificadoException {
+		String signer_type = null, signer_file = null, signer_password = null, signer_alias = null;
 		try {
 			XMLSignatureFactory fac = XMLSignatureFactory.getInstance(); 
 			
-			final Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA256, null),
-					Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)), null, null);
+			Transform transform = fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null);
+			Transform transform2 = fac.newTransform("http://www.w3.org/TR/2001/REC-xml-c14n-20010315", (TransformParameterSpec) null);
+			ArrayList<Transform> lst = new ArrayList<>();
+			lst.add(transform);
+			lst.add(transform2);
+			
+			final Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA256, null), lst, null, null);
 			
 			SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null),
 					fac.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", (SignatureMethodParameterSpec) null), 
 					Collections.singletonList(ref));
 			
-			final KeyStore ks = KeyStore.getInstance(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE));
+			signer_type = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE);
+			final KeyStore ks = KeyStore.getInstance(signer_type);
 			
-			final File signerFile = new File(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE));
+			signer_file = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE);
+			final File signerFile = new File(signer_file);
 			final FileInputStream fis = new FileInputStream(signerFile);
-			ks.load(fis, SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray());
+			signer_password = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD);
+			ks.load(fis, signer_password.toCharArray());
 			fis.close();
 			
-			final KeyStore.PrivateKeyEntry keyEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_ALIAS),
-					new KeyStore.PasswordProtection(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray()));
+			signer_alias = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_ALIAS);
+			final KeyStore.PrivateKeyEntry keyEntry = (KeyStore.PrivateKeyEntry) ks.getEntry(signer_alias,
+					new KeyStore.PasswordProtection(signer_password.toCharArray()));
 			final X509Certificate cert = (X509Certificate) keyEntry.getCertificate();
 			
 			final KeyInfoFactory kif = fac.getKeyInfoFactory();
@@ -496,6 +509,9 @@ public class OnCert {
 			return sw.toString();
 		}
 		catch(Exception ex) {
+			LOGGER.error("::: Dados do certificado ::: signer_type = "+signer_type 
+					+", signer_file = "+ signer_file +", signer_password = "+ signer_password 
+					+", signer_alias = "+signer_alias);
 			throw new CertificadoException(ex);
 		}
 	}
@@ -509,15 +525,27 @@ public class OnCert {
 		return KeyStoreLoaderFactory.factoryKeyStoreLoader().getKeyStore();
 	}
 
-	public static KeyStore loadKeystore() throws KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException {
-		KeyStore ks = KeyStore.getInstance(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE));
-		
-		File signerFile = new File(SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE));
-		FileInputStream fis = new FileInputStream(signerFile);
-		ks.load(fis, SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD).toCharArray());
-		fis.close();
-		
-		return ks;
+	public static KeyStore loadKeystore() throws CertificadoException {
+		String signer_type = null, signer_file = null, signer_password = null;
+		try {
+			signer_type = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_TYPE);
+			KeyStore ks = KeyStore.getInstance(signer_type);
+			
+			signer_file = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_FILE);
+			File signerFile = new File(signer_file);
+			FileInputStream fis = new FileInputStream(signerFile);
+			
+			signer_password = SystemPropertiesMessage.getSystemEnvOrProperty(Constantes.SIGNER_PASSWORD);
+			ks.load(fis, signer_password.toCharArray());
+			fis.close();
+			
+			return ks;
+		}
+		catch(KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException ex) {
+			LOGGER.error("::: Dados do certificado ::: signer_type = "+signer_type 
+					+", signer_file = "+ signer_file +", signer_password = "+ signer_password);
+			throw new CertificadoException();
+		}
 	}
 
 	public static String getAliasCertificate(KeyStore keystore) throws KeyStoreException {

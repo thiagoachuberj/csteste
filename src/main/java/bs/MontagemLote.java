@@ -1,31 +1,16 @@
 package bs;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.soap.SOAPException;
 
 import org.apache.log4j.Logger;
 
 import exception.BusinessException;
-import lote.envio.ESocial;
-import lote.envio.ESocial.EnvioLoteEventos;
-import lote.envio.ESocial.EnvioLoteEventos.Eventos;
-import lote.envio.TArquivoEsocial;
-import lote.envio.TIdeEmpregador;
-import lote.envio.TIdeTransmissor;
-import util.Util;
 
 public class MontagemLote {
 
 	private static Logger LOGGER = Logger.getLogger(MontagemLote.class);
 	
-	public MontagemLote() {
-	}
-	
-	/*public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
+	public static String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
 		StringBuilder sb = new StringBuilder();
 		
 		try {
@@ -75,15 +60,14 @@ public class MontagemLote {
 			//System.out.println("XML SOAP a ser enviado : "+sb.toString());
 		}
 		catch (Exception e) {
-			LOGGER.error("montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor): ", e);
-			throw new BusinessException("montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor)", e);	
+			LOGGER.error("Erro no metodo montaLote(): ", e);
+			throw new BusinessException("Erro no metodo montaLote(): ", e);
 		}
 
 		return sb.toString();
 	}
-	*/
 	
-	public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
+	/*public String montaLote(List<String> lstEventosAssinados, String grupoLote, String numeroEmissor, String numeroTransmissor) throws BusinessException {
 		try {
 			ESocial loteEnvio = new ESocial();
 			EnvioLoteEventos envioLoteEventos = new EnvioLoteEventos();
@@ -130,7 +114,7 @@ public class MontagemLote {
 				break;
 			}
 			
-			return Util.formataNameSpace(sb.toString());
+			return Util.formataNameSpaceEvento(sb.toString());
 		}
 		catch (SOAPException | IOException e) {
 			LOGGER.error("Erro no metodo Util.createTemplateSoapMessage(): ", e);
@@ -140,6 +124,6 @@ public class MontagemLote {
 			LOGGER.error("Erro no metodo Util.convertObjectInXML(esocial): ", e);
 			throw new BusinessException("Erro no metodo Util.createTemplateSoapMessage(): ", e);
 		}
-	}
+	}*/
 	
 }
